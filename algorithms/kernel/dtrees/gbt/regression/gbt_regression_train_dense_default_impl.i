@@ -164,22 +164,63 @@ services::Status RegressionTrainBatchKernel<algorithmFPType, method, cpu>::compu
         DAAL_CHECK_STATUS(s, (indexedFeatures.init<algorithmFPType, cpu>(*x, &featTypes, par.splitMethod == gbt::training::inexact ? &prm : nullptr)));
     }
 
+    algorithmFPType* ptrWeightFeatImp     = nullptr;
+    algorithmFPType* ptrCoverFeatImp      = nullptr;
+    algorithmFPType* ptrCoverTotalFeatImp = nullptr;
+    algorithmFPType* ptrGainFeatImp       = nullptr;
+    algorithmFPType* ptrGainTotalFeatImp  = nullptr;
+
+    if (par.resultsToCompute & gbt::training::computeWeight)
+    {
+        NumericTable* ptrWeight = res.get(weight).get();
+        WriteOnlyRows<algorithmFPType, cpu> rawW(ptrWeight, 0, 1);
+        ptrWeightFeatImp = rawW.get();
+    }
+    if (par.resultsToCompute & gbt::training::computeTotalCover)
+    {
+        NumericTable* ptrCoverTotal = res.get(totalCover).get();
+        WriteOnlyRows<algorithmFPType, cpu> rawCT(ptrCoverTotal, 0, 1);
+        ptrCoverTotalFeatImp = rawCT.get();
+    }
+    if (par.resultsToCompute & gbt::training::computeCover)
+    {
+        NumericTable* ptrCover = res.get(cover).get();
+        WriteOnlyRows<algorithmFPType, cpu> rawC(ptrCover, 0, 1);
+        ptrCoverFeatImp = rawC.get();
+    }
+    if (par.resultsToCompute & gbt::training::computeTotalGain)
+    {
+        NumericTable* ptrGainTotal = res.get(totalGain).get();
+        WriteOnlyRows<algorithmFPType, cpu> rawGT(ptrGainTotal, 0, 1);
+        ptrGainTotalFeatImp = rawGT.get();
+    }
+    if (par.resultsToCompute & gbt::training::computeGain)
+    {
+        NumericTable* ptrGain = res.get(gain).get();
+        WriteOnlyRows<algorithmFPType, cpu> rawG(ptrGain, 0, 1);
+        ptrGainFeatImp = rawG.get();
+    }
+
     if(inexactWithHistMethod)
     {
         if (indexedFeatures.maxNumIndices() <= 256)
-            return computeImpl<algorithmFPType, cpu, uint8_t, TrainBatchTask<algorithmFPType, uint8_t, method, cpu >>
-                (pHostApp, x, y, *static_cast<daal::algorithms::gbt::regression::internal::ModelImpl*>(&m), par, engine, 1, indexedFeatures, featTypes);
+            return computeImpl<algorithmFPType, cpu, uint8_t, TrainBatchTask<algorithmFPType, uint8_t, method, cpu >, Result>
+                (pHostApp, x, y, *static_cast<daal::algorithms::gbt::regression::internal::ModelImpl*>(&m), par, engine, 1, indexedFeatures, featTypes,
+                &res, ptrWeightFeatImp, ptrCoverFeatImp, ptrCoverTotalFeatImp, ptrGainFeatImp, ptrGainTotalFeatImp);
         else if (indexedFeatures.maxNumIndices() <= 65536)
-            return computeImpl<algorithmFPType, cpu, uint16_t, TrainBatchTask<algorithmFPType, uint16_t, method, cpu >>
-                (pHostApp, x, y, *static_cast<daal::algorithms::gbt::regression::internal::ModelImpl*>(&m), par, engine, 1, indexedFeatures, featTypes);
+            return computeImpl<algorithmFPType, cpu, uint16_t, TrainBatchTask<algorithmFPType, uint16_t, method, cpu >, Result>
+                (pHostApp, x, y, *static_cast<daal::algorithms::gbt::regression::internal::ModelImpl*>(&m), par, engine, 1, indexedFeatures, featTypes,
+                &res, ptrWeightFeatImp, ptrCoverFeatImp, ptrCoverTotalFeatImp, ptrGainFeatImp, ptrGainTotalFeatImp);
         else
-            return computeImpl<algorithmFPType, cpu, uint32_t, TrainBatchTask<algorithmFPType, uint32_t, method, cpu >>
-                (pHostApp, x, y, *static_cast<daal::algorithms::gbt::regression::internal::ModelImpl*>(&m), par, engine, 1, indexedFeatures, featTypes);
+            return computeImpl<algorithmFPType, cpu, uint32_t, TrainBatchTask<algorithmFPType, uint32_t, method, cpu >, Result>
+                (pHostApp, x, y, *static_cast<daal::algorithms::gbt::regression::internal::ModelImpl*>(&m), par, engine, 1, indexedFeatures, featTypes,
+                &res, ptrWeightFeatImp, ptrCoverFeatImp, ptrCoverTotalFeatImp, ptrGainFeatImp, ptrGainTotalFeatImp);
     }
     else
     {
-        return computeImpl<algorithmFPType, cpu, uint32_t, TrainBatchTask<algorithmFPType, uint32_t, method, cpu >>
-            (pHostApp, x, y, *static_cast<daal::algorithms::gbt::regression::internal::ModelImpl*>(&m), par, engine, 1, indexedFeatures, featTypes);
+        return computeImpl<algorithmFPType, cpu, uint32_t, TrainBatchTask<algorithmFPType, uint32_t, method, cpu >, Result>
+            (pHostApp, x, y, *static_cast<daal::algorithms::gbt::regression::internal::ModelImpl*>(&m), par, engine, 1, indexedFeatures, featTypes,
+            &res, ptrWeightFeatImp, ptrCoverFeatImp, ptrCoverTotalFeatImp, ptrGainFeatImp, ptrGainTotalFeatImp);
     }
 }
 

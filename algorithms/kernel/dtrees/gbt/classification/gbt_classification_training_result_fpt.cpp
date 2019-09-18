@@ -42,6 +42,34 @@ DAAL_EXPORT services::Status Result::allocate(const daal::algorithms::Input *inp
     const classifier::training::Input* inp = static_cast<const classifier::training::Input*>(input);
     const size_t nFeatures = inp->get(classifier::training::data)->getNumberOfColumns();
     set(classifier::training::model, daal::algorithms::gbt::classification::Model::create(nFeatures, &s));
+
+    const Parameter *par = static_cast<const Parameter *>(parameter);
+    if(par->resultsToCompute & gbt::training::computeGain)
+    {
+        set(gain, data_management::NumericTablePtr(data_management::HomogenNumericTable<algorithmFPType>::create(
+            nFeatures, 1, data_management::NumericTable::doAllocate, 0, &s)));
+    }
+    if(par->resultsToCompute & gbt::training::computeTotalGain)
+    {
+        set(totalGain, data_management::NumericTablePtr(data_management::HomogenNumericTable<algorithmFPType>::create(
+            nFeatures, 1, data_management::NumericTable::doAllocate, 0, &s)));
+    }
+    if(par->resultsToCompute & gbt::training::computeCover)
+    {
+        set(cover, data_management::NumericTablePtr(data_management::HomogenNumericTable<algorithmFPType>::create(
+            nFeatures, 1, data_management::NumericTable::doAllocate, 0, &s)));
+    }
+    if(par->resultsToCompute & gbt::training::computeTotalCover)
+    {
+        set(totalCover, data_management::NumericTablePtr(data_management::HomogenNumericTable<algorithmFPType>::create(
+            nFeatures, 1, data_management::NumericTable::doAllocate, 0, &s)));
+    }
+    if(par->resultsToCompute & gbt::training::computeWeight)
+    {
+        set(weight, data_management::NumericTablePtr(data_management::HomogenNumericTable<algorithmFPType>::create(
+            nFeatures, 1, data_management::NumericTable::doAllocate, 0, &s)));
+    }
+
     return s;
 }
 

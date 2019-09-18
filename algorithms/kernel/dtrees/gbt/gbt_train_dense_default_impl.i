@@ -348,9 +348,12 @@ protected:
 };
 
 
-template <typename algorithmFPType, typename RowIndexType, typename BinIndexType, CpuType cpu, typename TaskType>
+template <typename algorithmFPType, typename RowIndexType, typename BinIndexType, CpuType cpu, typename TaskType, typename ResultType>
 services::Status  computeTypeDisp(HostAppIface* pHostApp, const NumericTable *x, const NumericTable *y, gbt::internal::ModelImpl& md,
-    const gbt::training::Parameter& par, engines::internal::BatchBaseImpl& engine, size_t nClasses, dtrees::internal::IndexedFeatures& indexedFeatures, dtrees::internal::FeatureTypes& featTypes)
+    const gbt::training::Parameter& par, engines::internal::BatchBaseImpl& engine, size_t nClasses,
+    dtrees::internal::IndexedFeatures& indexedFeatures, dtrees::internal::FeatureTypes& featTypes, ResultType *res,
+    algorithmFPType *ptrWeightFeatImp, algorithmFPType *ptrCoverFeatImp, algorithmFPType *ptrCoverTotalFeatImp,
+    algorithmFPType *ptrGainFeatImp, algorithmFPType *ptrGainTotalFeatImp)
 {
     services::Status s;
 
@@ -454,6 +457,15 @@ services::Status  computeTypeDisp(HostAppIface* pHostApp, const NumericTable *x,
         storage.newFI = newFI;
     }
 
+    size_t *totalCoverFeature  = nullptr;
+    size_t *weightFeature      = nullptr;
+    double *totalGainFeature   = nullptr;
+    algorithmFPType *allWeight = nullptr;
+
+    TVector<algorithmFPType, cpu> allWeightVec(nStor, static_cast<algorithmFPType>(0));
+    DAAL_CHECK_MALLOC(allWeightVec.get());
+    allWeight = allWeightVec.get();
+
     for(size_t i = 0; (i < par.maxIterations) && !algorithms::internal::isCancelled(s, pHostApp); ++i)
     {
         s = task.run(aTbl, aTblImp, aTblSmplCnt, i, storage);
@@ -469,10 +481,60 @@ services::Status  computeTypeDisp(HostAppIface* pHostApp, const NumericTable *x,
             deleteTables<cpu>(aTbl, aTblImp, aTblSmplCnt, nTrees);
             break;
         }
+
         for(iTree = 0; iTree < nTrees; ++iTree)
+        {
+            if ((ptrCoverTotalFeatImp != nullptr) || (ptrCoverFeatImp != nullptr))
+            {
+                totalCoverFeature = (aTbl[iTree]->getArrayCoverFeature());
+            }
+            if ((ptrWeightFeatImp != nullptr) || (ptrCoverFeatImp != nullptr) || (ptrGainFeatImp != nullptr))
+            {
+                weightFeature = aTbl[iTree]->getArrayNumSplitFeature();
+            }
+            if ((ptrGainTotalFeatImp != nullptr) || (ptrGainFeatImp != nullptr))
+            {
+                totalGainFeature = (aTbl[iTree]->getArrayGainFeature());
+            }
+
+            if (ptrWeightFeatImp != nullptr)
+                for(size_t kFeature = 0; kFeature < nStor; ++kFeature)
+                    ptrWeightFeatImp[kFeature] += static_cast<algorithmFPType>(weightFeature[kFeature]);
+
+            if (ptrCoverTotalFeatImp != nullptr)
+                for(size_t kFeature = 0; kFeature < nStor; ++kFeature)
+                    ptrCoverTotalFeatImp[kFeature] += static_cast<algorithmFPType>(totalCoverFeature[kFeature]);
+
+            if (ptrGainTotalFeatImp != nullptr)
+                for(size_t kFeature = 0; kFeature < nStor; ++kFeature)
+                    ptrGainTotalFeatImp[kFeature] += static_cast<algorithmFPType>(totalGainFeature[kFeature]);
+
+            if (ptrCoverFeatImp != nullptr)
+                for(size_t kFeature = 0; kFeature < nStor; ++kFeature)
+                    ptrCoverFeatImp[kFeature] += static_cast<algorithmFPType>(totalCoverFeature[kFeature]);
+
+            if (ptrGainFeatImp != nullptr)
+                for(size_t kFeature = 0; kFeature < nStor; ++kFeature)
+                    ptrGainFeatImp[kFeature] += static_cast<algorithmFPType>(totalGainFeature[kFeature]);
+
+            if ((ptrWeightFeatImp != nullptr) || (ptrCoverFeatImp != nullptr) || (ptrGainFeatImp != nullptr))
+                for(size_t kFeature = 0; kFeature < nStor; ++kFeature)
+                    allWeight[kFeature] += static_cast<algorithmFPType>(weightFeature[kFeature]);
+
             md.add(aTbl[iTree], aTblImp[iTree], aTblSmplCnt[iTree]);
+        }
+
         if((i + 1 < par.maxIterations) && task.done())
             break;
+    }
+
+    for (size_t i = 0; i < nStor; ++i)
+    {
+        if ((ptrCoverFeatImp != nullptr) && (allWeight[i] != 0))
+            ptrCoverFeatImp[i] = ptrCoverFeatImp[i] / allWeight[i];
+
+        if ((ptrGainFeatImp != nullptr) && (allWeight[i] != 0))
+            ptrGainFeatImp[i] = ptrGainFeatImp[i] / allWeight[i];
     }
 
     return s;
@@ -482,11 +544,16 @@ services::Status  computeTypeDisp(HostAppIface* pHostApp, const NumericTable *x,
 //////////////////////////////////////////////////////////////////////////////////////////
 // compute() implementation
 //////////////////////////////////////////////////////////////////////////////////////////
-template <typename algorithmFPType, CpuType cpu, typename BinIndexType, typename TaskType>
+template <typename algorithmFPType, CpuType cpu, typename BinIndexType, typename TaskType, typename ResultType>
 services::Status computeImpl(HostAppIface* pHostApp, const NumericTable *x, const NumericTable *y, gbt::internal::ModelImpl& md,
-    const gbt::training::Parameter& par, engines::internal::BatchBaseImpl& engine, size_t nClasses, dtrees::internal::IndexedFeatures& indexedFeatures, dtrees::internal::FeatureTypes& featTypes)
+    const gbt::training::Parameter& par, engines::internal::BatchBaseImpl& engine, size_t nClasses,
+    dtrees::internal::IndexedFeatures& indexedFeatures, dtrees::internal::FeatureTypes& featTypes, ResultType *res,
+    algorithmFPType *ptrWeightFeatImp, algorithmFPType *ptrCoverFeatImp, algorithmFPType *ptrCoverTotalFeatImp,
+    algorithmFPType *ptrGainFeatImp, algorithmFPType *ptrGainTotalFeatImp)
+
 {
-    return computeTypeDisp<algorithmFPType, int, BinIndexType, cpu, TaskType>( pHostApp, x, y, md, par, engine, nClasses, indexedFeatures, featTypes); // TODO: remove int
+    return computeTypeDisp<algorithmFPType, int, BinIndexType, cpu, TaskType>(pHostApp, x, y, md, par, engine, nClasses, indexedFeatures, featTypes, res,
+        ptrWeightFeatImp, ptrCoverFeatImp, ptrCoverTotalFeatImp, ptrGainFeatImp, ptrGainTotalFeatImp); // TODO: remove int
 }
 
 } /* namespace internal */
