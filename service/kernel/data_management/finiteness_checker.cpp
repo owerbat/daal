@@ -77,6 +77,7 @@ bool valuesAreNotFinite(const double * dataPtr, size_t n, bool allowNaN)
 template <typename DataType, daal::CpuType cpu>
 DataType computeSum(size_t nDataPtrs, size_t nElementsPerPtr, const DataType ** dataPtrs)
 {
+    printf("not avx512\n");
     DataType sum = 0;
     for (size_t ptrIdx = 0; ptrIdx < nDataPtrs; ++ptrIdx)
         for (size_t i = 0; i < nElementsPerPtr; ++i) sum += dataPtrs[ptrIdx][i];
@@ -87,6 +88,7 @@ DataType computeSum(size_t nDataPtrs, size_t nElementsPerPtr, const DataType ** 
 template <daal::CpuType cpu>
 double computeSumSOA(NumericTable & table, bool & sumIsFinite)
 {
+    printf("not avx512\n");
     double sum                                  = 0;
     const size_t nRows                          = table.getNumberOfRows();
     const size_t nCols                          = table.getNumberOfColumns();
@@ -122,6 +124,7 @@ double computeSumSOA(NumericTable & table, bool & sumIsFinite)
 template <typename DataType, daal::CpuType cpu>
 bool checkFiniteness(const size_t nElements, size_t nDataPtrs, size_t nElementsPerPtr, const DataType ** dataPtrs, bool allowNaN)
 {
+    printf("not avx512\n");
     bool notFinite = false;
     for (size_t ptrIdx = 0; ptrIdx < nDataPtrs; ++ptrIdx) notFinite = notFinite || valuesAreNotFinite(dataPtrs[ptrIdx], nElementsPerPtr, allowNaN);
 
@@ -131,6 +134,7 @@ bool checkFiniteness(const size_t nElements, size_t nDataPtrs, size_t nElementsP
 template <daal::CpuType cpu>
 bool checkFinitenessSOA(NumericTable & table, bool allowNaN)
 {
+    printf("not avx512\n");
     bool valuesAreFinite                        = true;
     const size_t nRows                          = table.getNumberOfRows();
     const size_t nCols                          = table.getNumberOfColumns();
@@ -170,6 +174,7 @@ const size_t THREADING_BORDER = 262144;
 template <typename DataType>
 DataType sumWithAVX512(size_t n, const DataType * dataPtr)
 {
+    printf("avx512\n");
     const size_t nPerInstr = 64 / sizeof(DataType);
     DataType sum;
     if (sizeof(DataType) == 4)
@@ -194,6 +199,7 @@ DataType sumWithAVX512(size_t n, const DataType * dataPtr)
 template <typename DataType>
 DataType computeSumAVX512Impl(size_t nDataPtrs, size_t nElementsPerPtr, const DataType ** dataPtrs)
 {
+    printf("avx512\n");
     size_t nBlocksPerPtr = nElementsPerPtr / BLOCK_SIZE;
     if (nBlocksPerPtr == 0) nBlocksPerPtr = 1;
     size_t nElements    = nDataPtrs * nElementsPerPtr;
@@ -222,17 +228,20 @@ DataType computeSumAVX512Impl(size_t nDataPtrs, size_t nElementsPerPtr, const Da
 template <>
 float computeSum<float, avx512>(size_t nDataPtrs, size_t nElementsPerPtr, const float ** dataPtrs)
 {
+    printf("avx512\n");
     return computeSumAVX512Impl<float>(nDataPtrs, nElementsPerPtr, dataPtrs);
 }
 
 template <>
 double computeSum<double, avx512>(size_t nDataPtrs, size_t nElementsPerPtr, const double ** dataPtrs)
 {
+    printf("avx512\n");
     return computeSumAVX512Impl<double>(nDataPtrs, nElementsPerPtr, dataPtrs);
 }
 
 double computeSumSOAAVX512Impl(NumericTable & table, bool & sumIsFinite)
 {
+    printf("avx512\n");
     SafeStatus safeStat;
     double sum                                  = 0;
     bool breakFlag                              = false;
@@ -292,12 +301,14 @@ double computeSumSOAAVX512Impl(NumericTable & table, bool & sumIsFinite)
 template <>
 double computeSumSOA<avx512>(NumericTable & table, bool & sumIsFinite)
 {
+    printf("avx512\n");
     return computeSumSOAAVX512Impl(table, sumIsFinite);
 }
 
 services::Status checkFinitenessInBlocks(const float ** dataPtrs, bool inParallel, size_t nTotalBlocks, size_t nBlocksPerPtr, size_t nPerBlock,
                                          size_t nSurplus, bool allowNaN, bool & finiteness)
 {
+    printf("avx512\n");
     services::Status s;
     const size_t nPerInstr = 16;
     services::internal::TArray<bool, avx512> notFiniteArr(nTotalBlocks);
@@ -353,6 +364,7 @@ services::Status checkFinitenessInBlocks(const float ** dataPtrs, bool inParalle
 services::Status checkFinitenessInBlocks(const double ** dataPtrs, bool inParallel, size_t nTotalBlocks, size_t nBlocksPerPtr, size_t nPerBlock,
                                          size_t nSurplus, bool allowNaN, bool & finiteness)
 {
+    printf("avx512\n");
     services::Status s;
     const size_t nPerInstr = 8;
     services::internal::TArray<bool, avx512> notFiniteArr(nTotalBlocks);
@@ -408,6 +420,7 @@ services::Status checkFinitenessInBlocks(const double ** dataPtrs, bool inParall
 template <typename DataType>
 bool checkFinitenessAVX512Impl(const size_t nElements, size_t nDataPtrs, size_t nElementsPerPtr, const DataType ** dataPtrs, bool allowNaN)
 {
+    printf("avx512\n");
     size_t nBlocksPerPtr = nElementsPerPtr / BLOCK_SIZE;
     if (nBlocksPerPtr == 0) nBlocksPerPtr = 1;
     bool inParallel     = !(nElements < THREADING_BORDER);
@@ -423,17 +436,20 @@ bool checkFinitenessAVX512Impl(const size_t nElements, size_t nDataPtrs, size_t 
 template <>
 bool checkFiniteness<float, avx512>(const size_t nElements, size_t nDataPtrs, size_t nElementsPerPtr, const float ** dataPtrs, bool allowNaN)
 {
+    printf("avx512\n");
     return checkFinitenessAVX512Impl<float>(nElements, nDataPtrs, nElementsPerPtr, dataPtrs, allowNaN);
 }
 
 template <>
 bool checkFiniteness<double, avx512>(const size_t nElements, size_t nDataPtrs, size_t nElementsPerPtr, const double ** dataPtrs, bool allowNaN)
 {
+    printf("avx512\n");
     return checkFinitenessAVX512Impl<double>(nElements, nDataPtrs, nElementsPerPtr, dataPtrs, allowNaN);
 }
 
 bool checkFinitenessSOAAVX512Impl(NumericTable & table, bool allowNaN)
 {
+    printf("avx512\n");
     SafeStatus safeStat;
     bool valuesAreFinite                        = true;
     bool breakFlag                              = false;
@@ -488,6 +504,7 @@ bool checkFinitenessSOAAVX512Impl(NumericTable & table, bool allowNaN)
 template <>
 bool checkFinitenessSOA<avx512>(NumericTable & table, bool allowNaN)
 {
+    printf("avx512\n");
     return checkFinitenessSOAAVX512Impl(table, allowNaN);
 }
 
