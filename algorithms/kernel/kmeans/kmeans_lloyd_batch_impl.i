@@ -187,26 +187,19 @@ Status KMeansBatchKernel<method, algorithmFPType, cpu>::compute(const NumericTab
             }
         }
 
-        if (par->accuracyThreshold > (algorithmFPType)0.0)
+        algorithmFPType newTargetFunc = (algorithmFPType)0.0;
+
+        task->kmeansClearClusters(&newTargetFunc);
+        newTargetFunc -= newCentersGoalFunc;
+
+        if (internal::Math<algorithmFPType, cpu>::sFabs(oldTargetFunc - newTargetFunc) <= par->accuracyThreshold)
         {
-            algorithmFPType newTargetFunc = (algorithmFPType)0.0;
-
-            task->kmeansClearClusters(&newTargetFunc);
-            newTargetFunc -= newCentersGoalFunc;
-
-            if (internal::Math<algorithmFPType, cpu>::sFabs(oldTargetFunc - newTargetFunc) < par->accuracyThreshold)
-            {
-                kIter++;
-                break;
-            }
-
-            oldTargetFunc = newTargetFunc;
+            kIter++;
+            break;
         }
-        else
-        {
-            task->kmeansClearClusters(&oldTargetFunc);
-            oldTargetFunc -= newCentersGoalFunc;
-        }
+
+        oldTargetFunc = newTargetFunc;
+
         inClusters = clusters;
     }
 
