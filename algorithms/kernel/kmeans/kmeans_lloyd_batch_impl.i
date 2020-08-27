@@ -207,7 +207,23 @@ Status KMeansBatchKernel<method, algorithmFPType, cpu>::compute(const NumericTab
             task->kmeansClearClusters(&oldTargetFunc);
             oldTargetFunc -= newCentersGoalFunc;
         }
-        inClusters = clusters;
+
+        bool clustersHasNotChange = true;
+        for (size_t i = 0; i < p * nClusters; ++i)
+        {
+            if (clusters[i] != inClusters[i])
+            {
+                clustersHasNotChange = false;
+                break;
+            }
+        }
+        if (clustersHasNotChange)
+        {
+            kIter++;
+            break;
+        }
+        result |= daal::services::internal::daal_memcpy_s(inClusters, p * nClusters * sizeof(algorithmFPType),
+                                                          clusters, p * nClusters * sizeof(algorithmFPType));
     }
 
     if (!nIter)
