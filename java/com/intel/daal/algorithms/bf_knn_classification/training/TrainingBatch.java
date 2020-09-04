@@ -30,8 +30,8 @@ import com.intel.daal.services.DaalContext;
 
 /**
  * <a name="DAAL-CLASS-ALGORITHMS__BF_KNN_CLASSIFICATION__TRAINING__TRAININGBATCH"></a>
- * @brief Provides methods for k nearest neighbors model-based training in the batch processing mode
- * <!-- \n<a href="DAAL-REF-KNN-ALGORITHM">k nearest neighbors algorithm description and usage models</a> -->
+ * @brief Provides methods for brute-force k nearest neighbors model-based training in the batch processing mode
+ * <!-- \n<a href="DAAL-REF-KNN-ALGORITHM">brute-force k nearest neighbors algorithm description and usage models</a> -->
  */
 public class TrainingBatch extends com.intel.daal.algorithms.classifier.training.TrainingBatch {
     public  Parameter      parameter; /*!< Parameters of the algorithm */
@@ -44,10 +44,10 @@ public class TrainingBatch extends com.intel.daal.algorithms.classifier.training
     }
 
     /**
-     * Constructs a k nearest neighbors training algorithm by copying input objects
-     * and parameters of another k nearest neighbors training algorithm
+     * Constructs a brute-force k nearest neighbors training algorithm by copying input objects
+     * and parameters of another brute-force k nearest neighbors training algorithm
      * in the batch processing mode
-     * @param context   Context to manage k nearest neighbors model-based training
+     * @param context   Context to manage brute-force k nearest neighbors model-based training
      * @param other     Algorithm to use as the source to initialize the input objects
      *                  and parameters of the algorithm
      */
@@ -62,8 +62,8 @@ public class TrainingBatch extends com.intel.daal.algorithms.classifier.training
     }
 
     /**
-     * Constructs the k nearest neighbors training algorithm in the batch processing mode
-     * @param context   Context to manage k nearest neighbors model-based training
+     * Constructs the brute-force k nearest neighbors training algorithm in the batch processing mode
+     * @param context   Context to manage brute-force k nearest neighbors model-based training
      * @param cls       Data type to use in intermediate computations of k nearest neighbors,
      *                  Double.class or Float.class
      * @param method    Algorithm computation method, @ref TrainingMethod
@@ -92,9 +92,9 @@ public class TrainingBatch extends com.intel.daal.algorithms.classifier.training
     }
 
     /**
-     * Computes the result of k nearest neighbors model-based training
+     * Computes the result of brute-force k nearest neighbors model-based training
      * in the batch processing mode
-     * @return Result of k nearest neighbors model-based training
+     * @return Result of brute-force k nearest neighbors model-based training
      */
     @Override
     public TrainingResult compute() {
@@ -104,10 +104,10 @@ public class TrainingBatch extends com.intel.daal.algorithms.classifier.training
     }
 
     /**
-     * Returns a newly allocated k nearest neighbors training algorithm
+     * Returns a newly allocated brute-force k nearest neighbors training algorithm
      * with a copy of the input objects and parameters of this k nearest neighbors
      * training algorithm in the batch processing mode
-     * @param context   Context to manage k nearest neighbors model-based training
+     * @param context   Context to manage brute-force k nearest neighbors model-based training
      *
      * @return Newly allocated algorithm
      */

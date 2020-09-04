@@ -25,7 +25,7 @@ import java.lang.annotation.Native;
 
 /**
  * <a name="DAAL-CLASS-ALGORITHMS__BF_KNN_CLASSIFICATION__PREDICTION__PREDICTIONMETHOD"></a>
- * @brief Available methods for the k nearest neighbors prediction
+ * @brief Available methods for the brute-force k nearest neighbors prediction
  */
 public final class PredictionMethod {
 

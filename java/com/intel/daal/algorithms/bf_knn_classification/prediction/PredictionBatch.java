@@ -21,7 +21,7 @@
  * @{
  */
 /**
- * @brief Contains classes for making prediction based on the K nearest neighbors models
+ * @brief Contains classes for making prediction based on the brute-force K nearest neighbors models
  */
 package com.intel.daal.algorithms.bf_knn_classification.prediction;
 
@@ -32,8 +32,8 @@ import com.intel.daal.services.DaalContext;
 
 /**
  * <a name="DAAL-CLASS-ALGORITHMS__BF_KNN_CLASSIFICATION__PREDICTION__PREDICTIONBATCH"></a>
- * @brief Runs k nearest neighbors model based prediction algorithm
- * <!-- \n<a href="DAAL-REF-KNN-ALGORITHM">k nearest neighbors algorithm description and usage models</a> -->
+ * @brief Runs brute-force k nearest neighbors model based prediction algorithm
+ * <!-- \n<a href="DAAL-REF-KNN-ALGORITHM">brute-force k nearest neighbors algorithm description and usage models</a> -->
  *
  * @par References
  *      - PredictionMethod class
@@ -54,9 +54,9 @@ public class PredictionBatch extends com.intel.daal.algorithms.classifier.predic
     }
 
     /**
-     * Constructs k nearest neighbors prediction algorithm by copying input objects and parameters
-     * of another k nearest neighbors prediction algorithm
-     * @param context   Context to manage the k nearest neighbors prediction algorithm
+     * Constructs brute-force k nearest neighbors prediction algorithm by copying input objects and parameters
+     * of another brute-force k nearest neighbors prediction algorithm
+     * @param context   Context to manage the brute-force k nearest neighbors prediction algorithm
      * @param other     An algorithm to be used as the source to initialize the input objects
      *                  and parameters of the algorithm
      */
@@ -72,9 +72,9 @@ public class PredictionBatch extends com.intel.daal.algorithms.classifier.predic
     }
 
     /**
-     * Constructs k nearest neighbors prediction algorithm
-     * @param context   Context to manage the k nearest neighbors prediction algorithm
-     * @param cls       Data type to use in intermediate computations of the k nearest neighbors prediction algorithm,
+     * Constructs brute-force k nearest neighbors prediction algorithm
+     * @param context   Context to manage the brute-force k nearest neighbors prediction algorithm
+     * @param cls       Data type to use in intermediate computations of the brute-force k nearest neighbors prediction algorithm,
      *                  Double.class or Float.class
      * @param method    K nearest neighbors prediction method, @ref PredictionMethod
      */
@@ -102,9 +102,9 @@ public class PredictionBatch extends com.intel.daal.algorithms.classifier.predic
     }
 
     /**
-     * Returns the newly allocated k nearest neighbors prediction algorithm
-     * with a copy of input objects and parameters of this k nearest neighbors prediction algorithm
-     * @param context   Context to manage the k nearest neighbors prediction algorithm
+     * Returns the newly allocated brute-force k nearest neighbors prediction algorithm
+     * with a copy of input objects and parameters of this brute-force k nearest neighbors prediction algorithm
+     * @param context   Context to manage the brute-force k nearest neighbors prediction algorithm
      *
      * @return The newly allocated algorithm
      */

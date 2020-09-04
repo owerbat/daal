@@ -17,7 +17,7 @@
 
 /**
  * @defgroup bf_knn_classification_training Training
- * @brief Contains a class for KD-tree based kNN model-based training
+ * @brief Contains a class for brute-force kNN model-based training
  * @ingroup bf_knn_classification
  * @{
  */
@@ -28,7 +28,7 @@ import java.lang.annotation.Native;
 import com.intel.daal.utils.*;
 /**
  * <a name="DAAL-CLASS-ALGORITHMS__BF_KNN_CLASSIFICATION__TRAINING__TRAININGMETHOD"></a>
- * @brief Available methods for k nearest neighbors model-based training
+ * @brief Available methods for brute-force k nearest neighbors model-based training
  */
 public final class TrainingMethod {
 

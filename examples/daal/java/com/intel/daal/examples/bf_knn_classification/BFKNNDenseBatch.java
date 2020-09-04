@@ -17,7 +17,7 @@
 
 /*
  //  Content:
- //     Java example of k nearest neighbors algorithm in the batch processing mode.
+ //     Java example of brute-force k nearest neighbors algorithm in the batch processing mode.
  ////////////////////////////////////////////////////////////////////////////////
  */
 

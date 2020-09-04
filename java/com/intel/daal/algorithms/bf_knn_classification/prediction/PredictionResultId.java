@@ -26,7 +26,7 @@ import java.lang.annotation.Native;
 import com.intel.daal.utils.*;
 /**
  * <a name="DAAL-CLASS-ALGORITHMS__BF_KNN_CLASSIFICATION__PREDICTION__PREDICTIONRESULTID"></a>
- * @brief Available identifiers of the result of bf knn model-based prediction
+ * @brief Available identifiers of the result of brute-force knn model-based prediction
  */
 public final class PredictionResultId {
     private int _value;

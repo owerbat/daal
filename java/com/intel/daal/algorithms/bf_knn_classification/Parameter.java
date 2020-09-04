@@ -26,7 +26,7 @@ import com.intel.daal.services.DaalContext;
 
 /**
  * <a name="DAAL-CLASS-ALGORITHMS__BF_KNN_CLASSIFICATION__PARAMETER"></a>
- * @brief k nearest neighbors algorithm parameters
+ * @brief brute-force k nearest neighbors algorithm parameters
  */
 public class Parameter extends com.intel.daal.algorithms.classifier.Parameter {
     /** @private */
@@ -57,8 +57,8 @@ public class Parameter extends com.intel.daal.algorithms.classifier.Parameter {
 
     /**
      * @DAAL_DEPRECATED
-     * Sets the seed for random choosing elements from training dataset
-     * @param seed   Seed for random choosing elements from training dataset
+     * Sets the weight function used in prediction voting
+     * @param voteWeights   Weight function used in prediction voting
      */
     public void setVoteWeights(VoteWeightsId voteWeights) {
         cSetVoteWeights(this.cObject, voteWeights.getValue());
@@ -66,8 +66,8 @@ public class Parameter extends com.intel.daal.algorithms.classifier.Parameter {
 
     /**
      * @DAAL_DEPRECATED
-     * Returns the seed for random choosing elements from training dataset
-     * @return Seed for random choosing elements from training dataset
+     * Returns the weight function used in prediction voting
+     * @return Weight function used in prediction voting
      */
     public VoteWeightsId getVoteWeights() {
         return new VoteWeightsId(cGetVoteWeights(this.cObject));
@@ -98,16 +98,16 @@ public class Parameter extends com.intel.daal.algorithms.classifier.Parameter {
     }
 
     /**
-     * Sets the enable/disable an usage of the input dataset in kNN model flag
-     * @param flag   Enable/disable an usage of the input dataset in kNN model flag
+     * Sets the flag that indicates the results to compute
+     * @param flag   Flag that indicates the results to compute
      */
     public void setResultsToCompute(ResultsToComputeId flag) {
         cSetResultsToCompute(this.cObject, flag.getValue());
     }
 
     /**
-     * Returns the enable/disable an usage of the input dataset in kNN model flag
-     * @return Enable/disable an usage of the input dataset in kNN model flag
+     * Returns the flag that indicates the results to compute
+     * @return Flag that indicates the results to compute
      */
     public ResultsToComputeId getResultsToCompute() {
         return new ResultsToComputeId(cGetResultsToCompute(this.cObject));

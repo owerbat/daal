@@ -29,7 +29,7 @@ import com.intel.daal.services.DaalContext;
 
 /**
  * <a name="DAAL-CLASS-ALGORITHMS__BF_KNN_CLASSIFICATION__PREDICTION__PREDICTIONRESULT"></a>
- * @brief Result object for bf knn model-based prediction
+ * @brief Result object for brute-force knn model-based prediction
  */
 public final class PredictionResult extends com.intel.daal.algorithms.Result {
     /** @private */
@@ -38,8 +38,8 @@ public final class PredictionResult extends com.intel.daal.algorithms.Result {
     }
 
     /**
-     * Constructs the bf knn prediction result
-     * @param context   Context to manage the  result of the bf knn prediction algorithm
+     * Constructs the brute-force knn prediction result
+     * @param context   Context to manage the  result of the brute-force knn prediction algorithm
      */
     public PredictionResult(DaalContext context) {
         super(context);
@@ -51,7 +51,7 @@ public final class PredictionResult extends com.intel.daal.algorithms.Result {
     }
 
     /**
-     * Returns the result of bf knn model-based prediction
+     * Returns the result of brute-force knn model-based prediction
      * @param id    Identifier of the result
      * @return      Result that corresponds to the given identifier
      */
@@ -67,7 +67,7 @@ public final class PredictionResult extends com.intel.daal.algorithms.Result {
     }
 
     /**
-     * Sets the result of bf knn model-based prediction
+     * Sets the result of brute-force knn model-based prediction
      * @param id    Identifier of the result
      * @param val   Result that corresponds to the given identifier
      */
