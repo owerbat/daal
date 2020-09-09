@@ -93,6 +93,8 @@ class BFKNNDenseBatch {
 
         kNearestNeighborsTrain.input.set(InputId.data, trainData);
         kNearestNeighborsTrain.input.set(InputId.labels, trainGroundTruth);
+        kNearestNeighborsTrain.parameter.setNClasses(nClasses);
+        kNearestNeighborsTrain.parameter.setVoteWeights(VoteWeightsId.voteDistance);
 
         /* Build the k nearest neighbors model */
         TrainingResult trainingResult = kNearestNeighborsTrain.compute();
