@@ -57,13 +57,11 @@ public final class PredictionResult extends com.intel.daal.algorithms.classifier
      */
     public NumericTable get(PredictionResultId id) {
         int idValue = id.getValue();
-        System.out.println("5.1");
         if (idValue != PredictionResultId.prediction.getValue() &&
             idValue != PredictionResultId.indices.getValue() &&
             idValue != PredictionResultId.distances.getValue()) {
             throw new IllegalArgumentException("id unsupported");
         }
-        System.out.println("5.2");
 
         return (NumericTable)Factory.instance().createObject(getContext(), cGetPredictionResult(cObject, idValue));
     }
