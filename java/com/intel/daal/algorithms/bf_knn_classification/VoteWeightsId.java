@@ -54,6 +54,9 @@ public final class VoteWeightsId {
     private static final int voteDistanceId = 1;
 
     public static final VoteWeightsId voteUniform  = new VoteWeightsId(voteUniformId);
+        /*!< Uniform weights for neighbors for prediction voting. All neighbors are weighted equally */
     public static final VoteWeightsId voteDistance = new VoteWeightsId(voteDistanceId);
+        /*!< Weight neighbors by the inverse of their distance. Closer neighbors of a query point
+             will have a greater influence than neighbors that are further away */
 }
 /** @} */

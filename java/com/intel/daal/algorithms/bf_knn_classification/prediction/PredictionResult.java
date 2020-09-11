@@ -31,7 +31,7 @@ import com.intel.daal.services.DaalContext;
  * <a name="DAAL-CLASS-ALGORITHMS__BF_KNN_CLASSIFICATION__PREDICTION__PREDICTIONRESULT"></a>
  * @brief Result object for brute-force knn model-based prediction
  */
-public final class PredictionResult extends com.intel.daal.algorithms.Result {
+public final class PredictionResult extends com.intel.daal.algorithms.classifier.prediction.PredictionResult {
     /** @private */
     static {
         LibUtils.loadLibrary();
@@ -43,7 +43,7 @@ public final class PredictionResult extends com.intel.daal.algorithms.Result {
      */
     public PredictionResult(DaalContext context) {
         super(context);
-        this.cObject = cNewResult();
+        cObject = cNewResult();
     }
 
     public PredictionResult(DaalContext context, long cObject) {
@@ -57,11 +57,13 @@ public final class PredictionResult extends com.intel.daal.algorithms.Result {
      */
     public NumericTable get(PredictionResultId id) {
         int idValue = id.getValue();
+        System.out.println("5.1");
         if (idValue != PredictionResultId.prediction.getValue() &&
             idValue != PredictionResultId.indices.getValue() &&
             idValue != PredictionResultId.distances.getValue()) {
             throw new IllegalArgumentException("id unsupported");
         }
+        System.out.println("5.2");
 
         return (NumericTable)Factory.instance().createObject(getContext(), cGetPredictionResult(cObject, idValue));
     }

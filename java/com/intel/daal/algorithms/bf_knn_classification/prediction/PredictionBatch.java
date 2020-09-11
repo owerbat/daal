@@ -28,6 +28,7 @@ package com.intel.daal.algorithms.bf_knn_classification.prediction;
 import com.intel.daal.utils.*;
 import com.intel.daal.algorithms.Precision;
 import com.intel.daal.algorithms.bf_knn_classification.Parameter;
+import com.intel.daal.algorithms.bf_knn_classification.prediction.PredictionResult;
 import com.intel.daal.services.DaalContext;
 
 /**
@@ -111,6 +112,18 @@ public class PredictionBatch extends com.intel.daal.algorithms.classifier.predic
     @Override
     public PredictionBatch clone(DaalContext context) {
         return new PredictionBatch(context, this);
+    }
+
+    /**
+     * Computes the result of brute-force k nearest neighbors model-based prediction
+     * in the batch processing mode
+     * @return Result of brute-force k nearest neighbors model-based prediction
+     */
+    @Override
+    public PredictionResult compute() {
+        super.compute();
+        PredictionResult result = new PredictionResult(getContext(), cObject);
+        return result;
     }
 
     private native long cInit(int prec, int method);

@@ -46,7 +46,8 @@ JNIEXPORT jlong JNICALL Java_com_intel_daal_algorithms_bf_1knn_1classification_p
 JNIEXPORT jlong JNICALL Java_com_intel_daal_algorithms_bf_1knn_1classification_prediction_PredictionResult_cGetPredictionResult(JNIEnv * env, jobject thisObj,
                                                                                                                                 jlong resAddr, jint id)
 {
-    return jniArgument<bf_knn_classification::prediction::Result>::get<bf_knn_classification::prediction::ResultId, NumericTable>(resAddr, id);
+    return jniArgument<bf_knn_classification::prediction::Result>::get<bf_knn_classification::prediction::ResultId, NumericTable>(resAddr,
+        (bf_knn_classification::prediction::ResultId)id);
 }
 
 /*
