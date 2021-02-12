@@ -145,7 +145,11 @@ Status KMeansBatchKernel<method, algorithmFPType, cpu>::compute(const NumericTab
 
     for (kIter = 0; kIter < nIter; kIter++)
     {
-        auto task = TaskKMeansLloyd<algorithmFPType, cpu>::create(p, nClusters, inClusters, blockSize);
+        algorithmFPType goalFunc(0.0);
+        size_t cNum = 0;
+
+        auto task = TaskKMeansLloyd<algorithmFPType, cpu>::create(p, nClusters, inClusters, blockSize,
+            goalFunc, cNum, clusterS0.get(), clusterS1.get(), dS1.get(), cValues.get(), cIndices.get());
         DAAL_CHECK(task.get(), services::ErrorMemoryAllocationFailed);
         {
             DAAL_ITTNOTIFY_SCOPED_TASK(addNTToTaskThreaded);
@@ -156,17 +160,17 @@ Status KMeansBatchKernel<method, algorithmFPType, cpu>::compute(const NumericTab
 
         if (!s)
         {
-            task->kmeansClearClusters(&oldTargetFunc);
+            oldTargetFunc = goalFunc;
+            // task->kmeansClearClusters(&oldTargetFunc);
             break;
         }
 
-        {
-            DAAL_ITTNOTIFY_SCOPED_TASK(kmeansPartialReduceCentroids);
-            task->template kmeansComputeCentroids<method>(clusterS0.get(), clusterS1.get(), dS1.get());
-        }
+        // {
+        //     DAAL_ITTNOTIFY_SCOPED_TASK(kmeansPartialReduceCentroids);
+        //     task->template kmeansComputeCentroids<method>(clusterS0.get(), clusterS1.get(), dS1.get());
+        // }
 
-        size_t cNum;
-        DAAL_CHECK_STATUS(s, task->kmeansComputeCentroidsCandidates(cValues.get(), cIndices.get(), cNum));
+        // DAAL_CHECK_STATUS(s, task->kmeansComputeCentroidsCandidates(cValues.get(), cIndices.get(), cNum));
         size_t cPos = 0;
 
         algorithmFPType newCentersGoalFunc = (algorithmFPType)0.0;
@@ -206,7 +210,8 @@ Status KMeansBatchKernel<method, algorithmFPType, cpu>::compute(const NumericTab
             {
                 algorithmFPType newTargetFunc = (algorithmFPType)0.0;
 
-                task->kmeansClearClusters(&newTargetFunc);
+                newTargetFunc = goalFunc;
+                // task->kmeansClearClusters(&newTargetFunc);
                 newTargetFunc -= newCentersGoalFunc;
 
                 if (internal::Math<algorithmFPType, cpu>::sFabs(oldTargetFunc - newTargetFunc) < par->accuracyThreshold)
@@ -219,7 +224,8 @@ Status KMeansBatchKernel<method, algorithmFPType, cpu>::compute(const NumericTab
             }
             else
             {
-                task->kmeansClearClusters(&oldTargetFunc);
+                oldTargetFunc = goalFunc;
+                // task->kmeansClearClusters(&oldTargetFunc);
                 oldTargetFunc -= newCentersGoalFunc;
             }
         }

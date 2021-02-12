@@ -58,6 +58,7 @@ extern "C"
 
     DAAL_EXPORT void * _daal_get_tls_ptr(void * a, daal::tls_functype func);
     DAAL_EXPORT void * _daal_get_tls_local(void * tlsPtr);
+    DAAL_EXPORT void *& _daal_get_tls_ref_local(void *& tlsPtr);
     DAAL_EXPORT void _daal_reduce_tls(void * tlsPtr, void * a, daal::tls_reduce_functype func);
     DAAL_EXPORT void _daal_parallel_reduce_tls(void * tlsPtr, void * a, daal::tls_reduce_functype func);
     DAAL_EXPORT void _daal_del_tls_ptr(void * tlsPtr);
@@ -285,6 +286,12 @@ public:
     {
         void * pf = _daal_get_tls_local(tlsPtr);
         return (static_cast<F>(pf));
+    }
+
+   void *& ref_local()
+    {
+        void *& pf = _daal_get_tls_ref_local(tlsPtr);
+        return pf;
     }
 
     template <typename lambdaType>

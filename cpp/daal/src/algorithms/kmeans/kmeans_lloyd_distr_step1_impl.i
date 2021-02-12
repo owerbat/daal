@@ -116,7 +116,10 @@ Status KMeansDistributedStep1Kernel<method, algorithmFPType, cpu>::compute(size_
     Status s;
     algorithmFPType oldTargetFunc = (algorithmFPType)0.0;
     {
-        auto task = TaskKMeansLloyd<algorithmFPType, cpu>::create(p, nClusters, initClusters, blockSize);
+        algorithmFPType tmpGoalFunc(0.0);
+        size_t tmpCNum = 0;
+
+        auto task = TaskKMeansLloyd<algorithmFPType, cpu>::create(p, nClusters, initClusters, blockSize, tmpGoalFunc, tmpCNum);
         DAAL_CHECK(task.get(), services::ErrorMemoryAllocationFailed);
         DAAL_ASSERT(task);
 

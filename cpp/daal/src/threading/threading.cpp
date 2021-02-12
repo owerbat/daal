@@ -252,6 +252,16 @@ DAAL_EXPORT void * _daal_get_tls_local(void * tlsPtr)
 #endif
 }
 
+DAAL_EXPORT void *& _daal_get_tls_ref_local(void *& tlsPtr)
+{
+#if defined(__DO_TBB_LAYER__)
+    tbb::enumerable_thread_specific<void *> * p = static_cast<tbb::enumerable_thread_specific<void *> *>(tlsPtr);
+    return p->local();
+#elif defined(__DO_SEQ_LAYER__)
+    return tlsPtr;
+#endif
+}
+
 DAAL_EXPORT void _daal_reduce_tls(void * tlsPtr, void * a, daal::tls_reduce_functype func)
 {
 #if defined(__DO_TBB_LAYER__)

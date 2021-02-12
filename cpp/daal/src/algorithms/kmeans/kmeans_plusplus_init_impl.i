@@ -616,6 +616,7 @@ Status TaskPlusPlusBatchBase<algorithmFPType, cpu, DataHelper>::updateMinDist(co
 {
     SafeStatus safeStat;
     daal::threader_for(_nBlocks, _nBlocks, [=, &safeStat](size_t iBlock) {
+    // for (size_t iBlock = 0; iBlock < _nBlocks; ++iBlock) {
         safeStat |=
             _data.updateMinDistInBlock(_aMinDistAcc.get(), _nBlocks, iBlock, nTrials, _trialBest, aWeights, _lastAddedCenter.get(), _aMinDist.get());
     });
@@ -708,6 +709,7 @@ size_t TaskParallelPlusBatch<algorithmFPType, cpu, DataHelper>::samplePoints(siz
     }
     //sample each point independently
     daal::threader_for(nPt, nPt, [=](size_t iPt) {
+    // for (size_t iPt = 0; iPt < nPt; ++iPt) {
         const size_t iCandidate     = _nCandidates + iPt;
         algorithmFPType probability = this->_aProbability.get()[iCandidate];
         aPt[iPt]                    = this->findSample(this->overallError() * probability);
@@ -824,10 +826,12 @@ Status TaskParallelPlusUpdateDist<algorithmFPType, cpu, DataHelper>::updateMinDi
     algorithmFPType newOverallError(0.);
     SafeStatus safeStat;
     daal::threader_for(this->_nBlocks, this->_nBlocks, [=, &tlsData, &bMemoryAllocationFailed, &safeStat](size_t iBlock) {
+    // for (size_t iBlock = 0; iBlock < this->_nBlocks; ++iBlock) {
         TlsPPData_t * tlsLocal = tlsData.local();
         if (!tlsLocal)
         {
             bMemoryAllocationFailed = true;
+            // break;
             return;
         }
         safeStat |= processBlock(iBlock, tlsLocal, iFirstOfNewCandidates, nNewCandidates);
@@ -940,6 +944,7 @@ size_t TaskParallelPlusBatch<algorithmFPType, cpu, DataHelper>::calcCenters(size
     const size_t nPt = samplePoints(nRequired, aCenters, iRound);
     //copy points in parallel
     daal::threader_for(nPt, nPt, [=](size_t iPt) {
+    // for (size_t iPt = 0; iPt < nPt; ++iPt) {
         const size_t iRow = aCenters[iPt];
         this->_lastAddedCenterNorm2.get()[iPt] =
             algorithmFPType(0.5) * this->_data.copyOneRowCalcSumSq(iRow, this->_lastAddedCenter.get() + iPt * this->_data.dim);

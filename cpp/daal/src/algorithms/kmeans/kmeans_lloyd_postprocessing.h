@@ -87,16 +87,17 @@ struct PostProcessing<lloydDense, algorithmFPType, cpu>
 
         SafeStatus safeStat;
         daal::threader_for(nBlocks, nBlocks, [&](int iBlock) {
+        // for (size_t iBlock = 0; iBlock < nBlocks; ++iBlock) {
             algorithmFPType * x_clusters = tlsTask.local();
-            DAAL_CHECK_MALLOC_THR(x_clusters);
+            // DAAL_CHECK_MALLOC_THR(x_clusters);
             const size_t blockSize = (iBlock == nBlocks - 1) ? n - iBlock * blockSizeDefault : blockSizeDefault;
 
             ReadRows<algorithmFPType, cpu> mtData(*const_cast<NumericTable *>(ntData), iBlock * blockSizeDefault, blockSize);
-            DAAL_CHECK_BLOCK_STATUS_THR(mtData);
+            // DAAL_CHECK_BLOCK_STATUS_THR(mtData);
             const algorithmFPType * const data = mtData.get();
 
             WriteOnlyRows<int, cpu> assignBlock(ntAssign, iBlock * blockSizeDefault, blockSize);
-            DAAL_CHECK_BLOCK_STATUS_THR(assignBlock);
+            // DAAL_CHECK_BLOCK_STATUS_THR(assignBlock);
             int * assignments = assignBlock.get();
 
             const algorithmFPType * clustersSq = clSq.get();
@@ -149,14 +150,15 @@ struct PostProcessing<lloydDense, algorithmFPType, cpu>
 
         SafeStatus safeStat;
         daal::threader_for(nBlocks, nBlocks, [&](const int iBlock) {
+        // for (size_t iBlock = 0; iBlock < nBlocks; ++iBlock) {
             const size_t blockSize = (iBlock == nBlocks - 1) ? n - iBlock * blockSizeDefault : blockSizeDefault;
 
             ReadRows<algorithmFPType, cpu> mtData(*const_cast<NumericTable *>(ntData), iBlock * blockSizeDefault, blockSize);
-            DAAL_CHECK_BLOCK_STATUS_THR(mtData);
+            // DAAL_CHECK_BLOCK_STATUS_THR(mtData);
             const algorithmFPType * const data = mtData.get();
 
             ReadRows<int, cpu> assignBlock(ntAssign, iBlock * blockSizeDefault, blockSize);
-            DAAL_CHECK_BLOCK_STATUS_THR(assignBlock);
+            // DAAL_CHECK_BLOCK_STATUS_THR(assignBlock);
             const int * assignments = assignBlock.get();
 
             algorithmFPType goal = algorithmFPType(0);

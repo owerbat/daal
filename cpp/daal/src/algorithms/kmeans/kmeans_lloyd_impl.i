@@ -34,6 +34,8 @@
 
 #include "src/algorithms/kmeans/kmeans_lloyd_helper.h"
 
+#include "tbb/tbb.h"
+
 namespace daal
 {
 namespace algorithms
@@ -51,15 +53,27 @@ struct TaskKMeansLloyd
 {
     DAAL_NEW_DELETE();
 
-    TaskKMeansLloyd(int _dim, int _clNum, algorithmFPType * _centroids, const size_t max_block_size)
+    TaskKMeansLloyd(int _dim, int _clNum, algorithmFPType * _centroids, const size_t _max_block_size,
+        algorithmFPType & _resultGoalFunc, size_t & _resultCNum, int * _resultCS0 = nullptr,
+        algorithmFPType * _resultCS1 = nullptr, double * _resultDS1 = nullptr,
+        algorithmFPType * _resultCValues = nullptr, size_t * _resultCIndices = nullptr):
+        resultGoalFunc(_resultGoalFunc), resultCNum(_resultCNum)
     {
         dim      = _dim;
         clNum    = _clNum;
         cCenters = _centroids;
+        max_block_size = _max_block_size;
+
+        resultCS0 = _resultCS0;
+        resultCS1 = _resultCS1;
+        resultDS1 = _resultDS1;
+        resultCValues = _resultCValues;
+        resultCIndices = _resultCIndices;
 
         /* Allocate memory for all arrays inside TLS */
         tls_task = new daal::tls<TlsTask<algorithmFPType, cpu> *>([=]() -> TlsTask<algorithmFPType, cpu> * {
-            return TlsTask<algorithmFPType, cpu>::create(dim, clNum, max_block_size);
+            // return TlsTask<algorithmFPType, cpu>::create(dim, clNum, max_block_size);
+            return nullptr;
         }); /* Allocate memory for all arrays inside TLS: end */
 
         clSq = service_scalable_calloc<algorithmFPType, cpu>(clNum);
@@ -83,7 +97,7 @@ struct TaskKMeansLloyd
     {
         if (tls_task)
         {
-            tls_task->reduce([=](TlsTask<algorithmFPType, cpu> * tt) -> void { delete tt; });
+            tls_task->reduce([=](TlsTask<algorithmFPType, cpu> * tt) -> void { if (tt) delete tt; });
             delete tls_task;
         }
         if (clSq)
@@ -92,9 +106,12 @@ struct TaskKMeansLloyd
         }
     }
 
-    static SharedPtr<TaskKMeansLloyd<algorithmFPType, cpu> > create(int dim, int clNum, algorithmFPType * centroids, const size_t max_block_size)
+    static SharedPtr<TaskKMeansLloyd<algorithmFPType, cpu> > create(int dim, int clNum, algorithmFPType * centroids, const size_t max_block_size,
+        algorithmFPType & _resultGoalFunc, size_t & _resultCNum, int * _resultCS0 = nullptr, algorithmFPType * _resultCS1 = nullptr,
+        double * _resultDS1 = nullptr, algorithmFPType * _resultCValues = nullptr, size_t * _resultCIndices = nullptr)
     {
-        SharedPtr<TaskKMeansLloyd<algorithmFPType, cpu> > result(new TaskKMeansLloyd<algorithmFPType, cpu>(dim, clNum, centroids, max_block_size));
+        SharedPtr<TaskKMeansLloyd<algorithmFPType, cpu> > result(new TaskKMeansLloyd<algorithmFPType, cpu>(dim, clNum, centroids, max_block_size,
+            _resultGoalFunc, _resultCNum, _resultCS0, _resultCS1, _resultDS1, _resultCValues, _resultCIndices));
         if (result.get() && (!result->tls_task || !result->clSq))
         {
             result.reset();
@@ -130,6 +147,15 @@ struct TaskKMeansLloyd
 
     int dim;
     int clNum;
+    size_t max_block_size;
+
+    int * resultCS0;
+    algorithmFPType * resultCS1;
+    double * resultDS1;
+    algorithmFPType & resultGoalFunc;
+    size_t & resultCNum;
+    algorithmFPType * resultCValues;
+    size_t * resultCIndices;
 
     typedef typename Fp2IntSize<algorithmFPType>::IntT algIntType;
 };
@@ -143,14 +169,35 @@ Status TaskKMeansLloyd<algorithmFPType, cpu>::addNTToTaskThreadedDense(const Num
     size_t nBlocks = n / blockSizeDefault;
     nBlocks += (nBlocks * blockSizeDefault != n);
 
+    using tls_t = struct TlsTask<algorithmFPType, cpu>;
+
     SafeStatus safeStat;
-    daal::threader_for(nBlocks, nBlocks, [=, &safeStat](const int k) {
-        struct TlsTask<algorithmFPType, cpu> * tt = tls_task->local();
-        DAAL_CHECK_MALLOC_THR(tt);
+    int result = 0;
+
+    auto total = tbb::parallel_deterministic_reduce(
+            tbb::blocked_range<int>(0, nBlocks, 1), static_cast<tls_t *>(nullptr),
+            [&](const tbb::blocked_range<int> & range, tls_t * tt) -> tls_t * {
+        void *& local = tls_task->ref_local();
+        // struct TlsTask<algorithmFPType, cpu> * tt = tls_task->local();
+        // DAAL_CHECK_MALLOC_THR(tt);
+
+        if (local)
+        {
+            tt = static_cast<tls_t *>(local);
+            local = nullptr;
+        }
+        else
+        {
+            tt = tls_t::create(dim, clNum, max_block_size);
+        }
+
+        tt->clean(dim, clNum, max_block_size);
+
+        const int k = range.begin();
         const size_t blockSize = (k == nBlocks - 1) ? n - k * blockSizeDefault : blockSizeDefault;
 
         ReadRows<algorithmFPType, cpu> mtData(*const_cast<NumericTable *>(ntData), k * blockSizeDefault, blockSize);
-        DAAL_CHECK_BLOCK_STATUS_THR(mtData);
+        // DAAL_CHECK_BLOCK_STATUS_THR(mtData);
         const algorithmFPType * const data = mtData.get();
 
         const size_t p                           = dim;
@@ -168,7 +215,7 @@ Status TaskKMeansLloyd<algorithmFPType, cpu>::addNTToTaskThreadedDense(const Num
         WriteOnlyRows<int, cpu> assignBlock(ntAssign, k * blockSizeDefault, blockSize);
         if (ntAssign)
         {
-            DAAL_CHECK_BLOCK_STATUS_THR(assignBlock);
+            // DAAL_CHECK_BLOCK_STATUS_THR(assignBlock);
             assignments = assignBlock.get();
         }
 
@@ -243,7 +290,121 @@ Status TaskKMeansLloyd<algorithmFPType, cpu>::addNTToTaskThreadedDense(const Num
         } /* for (size_t i = 0; i < blockSize; i++) */
 
         *trg += goal;
-    }); /* daal::threader_for( nBlocks, nBlocks, [=](int k) */
+
+        return tt;
+    },
+    [&](const tls_t * lhs, const tls_t * rhs) {
+        tls_t * lhs_ = const_cast<tls_t *>(lhs);
+        tls_t * rhs_ = const_cast<tls_t *>(rhs);
+
+        lhs_->goalFunc += rhs_->goalFunc;
+
+        for (size_t i = 0; i < clNum; ++i)
+        {
+            lhs_->cS0[i] += rhs_->cS0[i];
+        }
+
+        for (size_t i = 0; i < clNum; ++i)
+        {
+            for (size_t j = 0; j < dim; ++j)
+            {
+                lhs_->cS1[i * dim + j] += rhs_->cS1[i * dim + j];
+            }
+        }
+
+        // kmeansComputeCentroidsCandidates
+        algorithmFPType * tmpValuesPtr = nullptr;
+        size_t * tmpIndicesPtr         = nullptr;
+
+        auto reduceValuesAndIndices = [&] (algorithmFPType * cValues,  size_t * cIndices,  size_t & cNum,
+                                           algorithmFPType * lcValues, size_t * lcIndices, size_t & lcNum) -> void
+        {
+            size_t cPos  = 0;
+            size_t lcPos = 0;
+
+            while (cPos + lcPos < clNum && (cPos < cNum || lcPos < lcNum))
+            {
+                if (cPos < cNum && (lcPos == lcNum || cValues[cPos] > lcValues[lcPos]))
+                {
+                    tmpValuesPtr[cPos + lcPos] = cValues[cPos];
+                    tmpIndicesPtr[cPos + lcPos] = cIndices[cPos];
+                    cPos++;
+                }
+                else
+                {
+                    tmpValuesPtr[cPos + lcPos] = lcValues[lcPos];
+                    tmpIndicesPtr[cPos + lcPos] = lcIndices[lcPos];
+                    lcPos++;
+                }
+            }
+            cNum = cPos + lcPos;
+            result |= daal::services::internal::daal_memcpy_s(cValues, cNum * sizeof(algorithmFPType), tmpValuesPtr, cNum * sizeof(algorithmFPType));
+            result |= daal::services::internal::daal_memcpy_s(cIndices, cNum * sizeof(size_t), tmpIndicesPtr, cNum * sizeof(size_t));
+        };
+
+        if (!lhs_->tmpValuesPtr && !rhs_->tmpValuesPtr)
+        {
+            lhs_->tmpValuesPtr   = service_scalable_calloc<algorithmFPType, cpu>(clNum);
+            lhs_->tmpIndicesPtr  = service_scalable_calloc<size_t, cpu>(clNum);
+            lhs_->reducedValues  = service_scalable_calloc<algorithmFPType, cpu>(clNum);
+            lhs_->reducedIndices = service_scalable_calloc<size_t, cpu>(clNum);
+
+            tmpValuesPtr  = lhs_->tmpValuesPtr;
+            tmpIndicesPtr = lhs_->tmpIndicesPtr;
+
+            reduceValuesAndIndices(lhs_->reducedValues, lhs_->reducedIndices, lhs_->reducedNum, lhs_->cValues, lhs_->cIndices, lhs_->cNum);
+            reduceValuesAndIndices(lhs_->reducedValues, lhs_->reducedIndices, lhs_->reducedNum, rhs_->cValues, rhs_->cIndices, rhs_->cNum);
+        }
+        else if (lhs_->tmpValuesPtr && !rhs_->tmpValuesPtr)
+        {
+            tmpValuesPtr  = lhs_->tmpValuesPtr;
+            tmpIndicesPtr = lhs_->tmpIndicesPtr;
+
+            reduceValuesAndIndices(lhs_->reducedValues, lhs_->reducedIndices, lhs_->reducedNum, rhs_->cValues, rhs_->cIndices, rhs_->cNum);
+        }
+        else if (!lhs_->tmpValuesPtr && rhs_->tmpValuesPtr)
+        {
+            lhs_->tmpValuesPtr   = rhs_->tmpValuesPtr;
+            lhs_->tmpIndicesPtr  = rhs_->tmpIndicesPtr;
+            lhs_->reducedValues  = rhs_->reducedValues;
+            lhs_->reducedIndices = rhs_->reducedIndices;
+            lhs_->reducedNum     = rhs_->reducedNum;
+
+            rhs_->tmpValuesPtr   = nullptr;
+            rhs_->tmpIndicesPtr  = nullptr;
+            rhs_->reducedValues  = nullptr;
+            rhs_->reducedIndices = nullptr;
+
+            tmpValuesPtr  = lhs_->tmpValuesPtr;
+            tmpIndicesPtr = lhs_->tmpIndicesPtr;
+
+            reduceValuesAndIndices(lhs_->reducedValues, lhs_->reducedIndices, lhs_->reducedNum, lhs_->cValues, lhs_->cIndices, lhs_->cNum);
+        }
+        else
+        {
+            tmpValuesPtr  = lhs_->tmpValuesPtr;
+            tmpIndicesPtr = lhs_->tmpIndicesPtr;
+
+            reduceValuesAndIndices(lhs_->reducedValues, lhs_->reducedIndices, lhs_->reducedNum, rhs_->reducedValues, rhs_->reducedIndices, rhs_->reducedNum);
+        }
+        // kmeansComputeCentroidsCandidates
+
+        void *& local = tls_task->ref_local();
+        // printf("1) local = %p, lhs = %p, rhs = %p\n", local, lhs, rhs);
+        if (local)
+        {
+            delete static_cast<tls_t *>(local);
+        }
+        local = static_cast<void *>(const_cast<tls_t *>(rhs));
+        // printf("2) local = %p, lhs = %p, rhs = %p\n", local, lhs, rhs);
+
+        return lhs_;
+    });
+
+    resultGoalFunc = total->goalFunc;
+    daal::services::internal::daal_memcpy_s(resultCS0, clNum * sizeof(int), total->cS0, clNum * sizeof(int));
+    daal::services::internal::daal_memcpy_s(resultCS1, clNum * dim * sizeof(algorithmFPType), total->cS1, clNum * dim * sizeof(algorithmFPType));
+
     return safeStat.detach();
 }
 
@@ -447,6 +608,10 @@ Status TaskKMeansLloyd<algorithmFPType, cpu>::kmeansComputeCentroidsCandidates(a
     algorithmFPType * tmpValuesPtr = tmpValues.get();
     size_t * tmpIndicesPtr         = tmpIndices.get();
     int result                     = 0;
+
+    tls_task->reduce([&](TlsTask<algorithmFPType, cpu> * tt) -> void {
+        printf("tt = %p\n", tt);
+    });
 
     tls_task->reduce([&](TlsTask<algorithmFPType, cpu> * tt) -> void {
         size_t lcNum               = tt->cNum;

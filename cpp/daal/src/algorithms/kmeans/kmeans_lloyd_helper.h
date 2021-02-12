@@ -60,6 +60,8 @@ struct TlsTask
         cS0      = service_scalable_calloc<int, cpu>(clNum);
         cValues  = service_scalable_calloc<algorithmFPType, cpu>(clNum);
         cIndices = service_scalable_calloc<size_t, cpu>(clNum);
+
+        // Initialize all result variables
     }
 
     ~TlsTask()
@@ -84,6 +86,22 @@ struct TlsTask
         {
             service_scalable_free<size_t, cpu>(cIndices);
         }
+        if (tmpValuesPtr)
+        {
+            service_scalable_free<algorithmFPType, cpu>(tmpValuesPtr);
+        }
+        if (tmpIndicesPtr)
+        {
+            service_scalable_free<size_t, cpu>(tmpIndicesPtr);
+        }
+        if (reducedValues)
+        {
+            service_scalable_free<algorithmFPType, cpu>(reducedValues);
+        }
+        if (reducedIndices)
+        {
+            service_scalable_free<size_t, cpu>(reducedIndices);
+        }
     }
 
     static TlsTask<algorithmFPType, cpu> * create(const size_t dim, const size_t clNum, const size_t maxBlockSize)
@@ -101,6 +119,18 @@ struct TlsTask
         return result;
     }
 
+    void clean(int dim, int clNum, int maxBlockSize)
+    {
+        goalFunc  = 0.0;
+        cNum      = 0;
+
+        service_memset_seq<algorithmFPType, cpu>(mklBuff, 0.0, maxBlockSize * clNum);
+        service_memset_seq<algorithmFPType, cpu>(cS1, 0.0, clNum * dim);
+        service_memset_seq<int, cpu>(cS0, 0, clNum);
+        service_memset_seq<algorithmFPType, cpu>(cValues, 0.0, clNum);
+        service_memset_seq<size_t, cpu>(cIndices, 0, clNum);
+    }
+
     algorithmFPType * mklBuff = nullptr;
     algorithmFPType * cS1     = nullptr;
     int * cS0                 = nullptr;
@@ -108,6 +138,12 @@ struct TlsTask
     size_t cNum               = 0;
     algorithmFPType * cValues = nullptr;
     size_t * cIndices         = nullptr;
+
+    algorithmFPType * tmpValuesPtr  = nullptr;
+    size_t * tmpIndicesPtr          = nullptr;
+    algorithmFPType * reducedValues = nullptr;
+    size_t * reducedIndices         = nullptr;
+    size_t reducedNum               = 0;
 };
 
 template <Method method, typename algorithmFPType, CpuType cpu>
