@@ -83,6 +83,7 @@ template <typename Kernel>
 constexpr bool is_valid_kernel_v =
     dal::detail::is_tag_one_of_v<Kernel,
                                  linear_kernel::detail::descriptor_tag,
+                                 polynomial_kernel::detail::descriptor_tag,
                                  rbf_kernel::detail::descriptor_tag>;
 
 template <typename Task = task::by_default>
@@ -192,7 +193,7 @@ public:
             : base_t(std::make_shared<detail::kernel_function<Kernel>>(kernel)) {}
 
     /// The descriptor of kernel function `K(x,y)`. Can be :expr:`linear_kernel::desc` or
-    /// :expr:`rbf_kernel::desc`.
+    /// :expr:`polynomial_kernel::desc` or :expr:`rbf_kernel::desc`.
     /// @remark default = :literal:`kernel`
     const Kernel& get_kernel() const {
         using kf_t = detail::kernel_function<Kernel>;
